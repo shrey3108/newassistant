@@ -1,0 +1,616 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    /* Custom styles for marketplace */
+    .marketplace-container {
+        background-color: #f8f9fa;
+        min-height: 100vh;
+        padding: 20px 0;
+    }
+
+    .listing-card {
+        border: none;
+        border-radius: 15px;
+        transition: transform 0.2s, box-shadow 0.2s;
+        overflow: hidden;
+        background: white;
+        height: 100%;
+    }
+
+    .listing-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+
+    .listing-image-container {
+        position: relative;
+        height: 250px;
+        overflow: hidden;
+    }
+
+    .listing-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s;
+    }
+
+    .listing-card:hover .listing-image {
+        transform: scale(1.05);
+    }
+
+    .listing-price {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: rgba(255, 255, 255, 0.9);
+        padding: 8px 15px;
+        border-radius: 25px;
+        font-weight: bold;
+        color: #2c3e50;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .listing-badge {
+        position: absolute;
+        top: 15px;
+        left: 15px;
+        background: #1DA1F2;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 15px;
+        font-size: 0.8em;
+        text-transform: uppercase;
+    }
+
+    .listing-details {
+        padding: 20px;
+    }
+
+    .listing-title {
+        font-size: 1.2em;
+        font-weight: 600;
+        margin-bottom: 10px;
+        color: #2c3e50;
+    }
+
+    .listing-info {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+
+    .info-item {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        color: #666;
+        font-size: 0.9em;
+    }
+
+    .listing-description {
+        color: #666;
+        font-size: 0.95em;
+        margin-bottom: 15px;
+        line-height: 1.5;
+    }
+
+    .listing-actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    .action-btn {
+        flex: 1;
+        padding: 8px 15px;
+        border-radius: 25px;
+        border: none;
+        font-weight: 500;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+    }
+
+    .contact-btn {
+        background-color: #1DA1F2;
+        color: white;
+    }
+
+    .contact-btn:hover {
+        background-color: #1991db;
+    }
+
+    .delete-btn {
+        background-color: #dc3545;
+        color: white;
+    }
+
+    .delete-btn:hover {
+        background-color: #c82333;
+    }
+
+    .new-listing-btn {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background-color: #1DA1F2;
+        color: white;
+        border: none;
+        font-size: 24px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        transition: transform 0.2s;
+        z-index: 1000;
+    }
+
+    .new-listing-btn:hover {
+        transform: scale(1.1);
+    }
+
+    /* Filters section */
+    .filters-section {
+        background: white;
+        padding: 20px;
+        border-radius: 15px;
+        margin-bottom: 30px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+
+    .filter-group {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+    }
+
+    .filter-item {
+        flex: 1;
+        min-width: 200px;
+    }
+
+    /* Custom modal styles */
+    .custom-modal .modal-content {
+        border-radius: 15px;
+        border: none;
+    }
+
+    .custom-modal .modal-header {
+        border-bottom: none;
+        padding: 20px;
+    }
+
+    .custom-modal .modal-body {
+        padding: 0 20px 20px;
+    }
+
+    .custom-modal .form-control {
+        border-radius: 10px;
+        border: 2px solid #eee;
+        padding: 12px;
+    }
+
+    .custom-modal .form-control:focus {
+        border-color: #1DA1F2;
+        box-shadow: none;
+    }
+
+    /* Empty state */
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: #666;
+    }
+
+    .empty-state i {
+        font-size: 48px;
+        color: #1DA1F2;
+        margin-bottom: 20px;
+    }
+
+    /* Add to your existing styles */
+    .like-btn, .share-btn {
+        background: none;
+        color: #666;
+        padding: 8px 15px;
+        border-radius: 20px;
+        transition: all 0.2s;
+    }
+
+    .like-btn:hover {
+        background-color: #ffebf0;
+        color: #e0245e;
+    }
+
+    .like-btn.liked {
+        color: #e0245e;
+        background-color: #ffebf0;
+    }
+
+    .share-btn:hover {
+        background-color: #e8f5fe;
+        color: #1DA1F2;
+    }
+
+    /* Share Modal Styles */
+    .share-modal .share-options {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 10px;
+        padding: 20px;
+    }
+
+    .share-option {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
+        padding: 10px;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .share-option:hover {
+        background-color: #f8f9fa;
+    }
+</style>
+        <div id="google_translate_element">
+
+<div class="marketplace-container">
+    <div class="container">
+        <!-- Filters Section -->
+        <div class="filters-section">
+            <h4 class="mb-3">Filters</h4>
+            <div class="filter-group">
+                <div class="filter-item">
+                    <select class="form-select" id="animalTypeFilter">
+                        <option value="">All Animal Types</option>
+                        <option value="cow">Cow</option>
+                        <option value="buffalo">Buffalo</option>
+                        <option value="goat">Goat</option>
+                        <option value="sheep">Sheep</option>
+                    </select>
+                </div>
+                <div class="filter-item">
+                    <select class="form-select" id="priceFilter">
+                        <option value="">Price Range</option>
+                        <option value="0-10000">Under ₹10,000</option>
+                        <option value="10000-50000">₹10,000 - ₹50,000</option>
+                        <option value="50000+">Above ₹50,000</option>
+                    </select>
+                </div>
+                <div class="filter-item">
+                    <input type="text" class="form-control" placeholder="Search by location..." id="locationFilter">
+                </div>
+            </div>
+        </div>
+
+    <!-- Listings Grid -->
+        <div class="row g-4">
+            {% if listings %}
+        {% for listing in listings %}
+                <div class="col-md-4">
+                    <div class="listing-card">
+                        <div class="listing-image-container">
+                {% if listing.image_url %}
+                            <img src="{{ listing.image_url }}" class="listing-image" alt="Livestock Image">
+                {% else %}
+                            <div class="listing-image d-flex align-items-center justify-content-center bg-light">
+                    <i class="fas fa-camera fa-3x text-muted"></i>
+                </div>
+                {% endif %}
+                            <div class="listing-price">₹{{ "{:,.0f}".format(listing.price) }}</div>
+                            <div class="listing-badge">{{ listing.animal_type|title }}</div>
+                        </div>
+                        <div class="listing-details">
+                            <h5 class="listing-title">{{ listing.animal_details.breed }} (ID: {{ listing.animal_id }})</h5>
+                            <div class="listing-info">
+                                <div class="info-item">
+                                    <i class="fas fa-calendar"></i>
+                                    <span>{{ listing.animal_details.age }} years</span>
+                                </div>
+                                <div class="info-item">
+                                    <i class="fas fa-weight"></i>
+                                    <span>{{ listing.animal_details.weight }} kg</span>
+                                </div>
+                                <div class="info-item">
+                                    <i class="fas fa-venus-mars"></i>
+                                    <span>{{ listing.animal_details.gender }}</span>
+                                </div>
+                                <div class="info-item">
+                                    <i class="fas fa-user"></i>
+                                    <span>{{ listing.owner_name }}</span>
+                                </div>
+                            </div>
+                            <p class="listing-description">{{ listing.description }}</p>
+                            <div class="listing-actions">
+                    {% if listing.owner_id == session.get('user_id') %}
+                                <button class="action-btn delete-btn delete-listing" data-listing-id="{{ listing._id }}">
+                                    <i class="fas fa-trash"></i> Remove
+                    </button>
+                    {% else %}
+                                <button class="action-btn contact-btn contact-seller" data-phone="{{ listing.phone_number }}">
+                                    <i class="fas fa-phone"></i> Contact
+                    </button>
+                    {% endif %}
+                                <button class="action-btn like-btn {% if session.get('user_id') in listing.get('likes', []) %}liked{% endif %}"
+                                        data-listing-id="{{ listing._id }}">
+                                    <i class="fas fa-heart"></i>
+                                    <span class="like-count">{{ listing.get('likes', [])|length }}</span>
+                                </button>
+                                <button class="action-btn share-btn" data-listing-id="{{ listing._id }}">
+                                    <i class="fas fa-share-alt"></i>
+                                    <span class="share-count">{{ listing.get('shares', 0) }}</span>
+                                </button>
+                            </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-store"></i>
+                    <h4>No Listings Available</h4>
+                    <p>Be the first to create a listing!</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- New Listing Button -->
+    <button class="new-listing-btn" data-bs-toggle="modal" data-bs-target="#newListingModal">
+        <i class="fas fa-plus"></i>
+    </button>
+</div>
+
+<!-- New Listing Modal -->
+<div class="modal fade" id="newListingModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content custom-modal">
+            <div class="modal-header">
+                <h5 class="modal-title">Create New Listing</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="newListingForm" enctype="multipart/form-data">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                        <label class="form-label">Select Animal</label>
+                        <select class="form-select" name="animal_id" required>
+                            <option value="">Choose an animal...</option>
+                            {% for animal in user_animals %}
+                            <option value="{{ animal._id }}">
+                                {{ animal.type|title }} - ID: {{ animal.id }}
+                                {% if animal.breed %}({{ animal.breed }}){% endif %}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                        <div class="col-md-6 mb-3">
+                        <label class="form-label">Price (₹)</label>
+                        <input type="number" class="form-control" name="price" required min="0">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                        <label class="form-label">Phone Number</label>
+                        <input type="tel" class="form-control" name="phone_number" required pattern="[0-9]{10}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Upload Image</label>
+                            <input type="file" class="form-control" name="image" accept="image/*">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" name="description" rows="4" placeholder="Describe your animal and any special characteristics..."></textarea>
+                    </div>
+                    <button type="submit" class="btn contact-btn w-100">Create Listing</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Share Modal -->
+<div class="modal fade" id="shareModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content custom-modal">
+            <div class="modal-header">
+                <h5 class="modal-title">Share Listing</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="share-options">
+                    <div class="share-option" data-platform="whatsapp">
+                        <i class="fab fa-whatsapp fa-2x text-success"></i>
+                        <span>WhatsApp</span>
+                    </div>
+                    <div class="share-option" data-platform="facebook">
+                        <i class="fab fa-facebook fa-2x text-primary"></i>
+                        <span>Facebook</span>
+                    </div>
+                    <div class="share-option" data-platform="twitter">
+                        <i class="fab fa-twitter fa-2x text-info"></i>
+                        <span>Twitter</span>
+                    </div>
+                    <div class="share-option" data-platform="copy">
+                        <i class="fas fa-copy fa-2x text-secondary"></i>
+                        <span>Copy Link</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    // Handle new listing submission
+    $('#newListingForm').on('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        
+        $.ajax({
+            url: '/api/marketplace/listings',
+            method: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                location.reload();
+            },
+            error: function(error) {
+                alert('Error creating listing: ' + error.responseJSON.message);
+            }
+        });
+    });
+
+    // Handle listing deletion
+    $('.delete-listing').on('click', function() {
+        if (confirm('Are you sure you want to remove this listing?')) {
+            const listingId = $(this).data('listing-id');
+            
+            $.ajax({
+                url: `/api/marketplace/listings/${listingId}`,
+                method: 'DELETE',
+                success: function(response) {
+                    location.reload();
+                },
+                error: function(error) {
+                    alert('Error removing listing: ' + error.responseJSON.message);
+                }
+            });
+        }
+    });
+
+    // Handle contact seller button
+    $('.contact-seller').on('click', function() {
+        const phone = $(this).data('phone');
+        window.location.href = `tel:${phone}`;
+    });
+
+    // Handle filters
+    function applyFilters() {
+        const animalType = $('#animalTypeFilter').val();
+        const priceRange = $('#priceFilter').val();
+        const location = $('#locationFilter').val().toLowerCase();
+
+        $('.col-md-4').each(function() {
+            let show = true;
+            const card = $(this);
+
+            // Animal type filter
+            if (animalType && !card.find('.listing-badge').text().toLowerCase().includes(animalType)) {
+                show = false;
+            }
+
+            // Price filter
+            if (priceRange) {
+                const price = parseInt(card.find('.listing-price').text().replace('₹', '').replace(',', ''));
+                const [min, max] = priceRange.split('-').map(p => p === '+' ? Infinity : parseInt(p));
+                if (price < min || price > max) {
+                    show = false;
+                }
+            }
+
+            // Location filter
+            if (location && !card.find('.listing-description').text().toLowerCase().includes(location)) {
+                show = false;
+            }
+
+            card.toggle(show);
+        });
+    }
+
+    // Add event listeners for filters
+    $('#animalTypeFilter, #priceFilter').on('change', applyFilters);
+    $('#locationFilter').on('input', applyFilters);
+
+    // Handle likes
+    $('.like-btn').on('click', function() {
+        const btn = $(this);
+        const listingId = btn.data('listing-id');
+        
+        $.ajax({
+            url: `/api/marketplace/listings/${listingId}/like`,
+            method: 'POST',
+            success: function(response) {
+                if (response.success) {
+                    btn.toggleClass('liked', response.liked);
+                    btn.find('.like-count').text(response.count);
+                }
+            },
+            error: function(error) {
+                alert('Error updating like: ' + error.responseJSON?.message);
+            }
+        });
+    });
+
+    // Handle share button
+    $('.share-btn').on('click', function() {
+        const listingId = $(this).data('listing-id');
+        const shareModal = new bootstrap.Modal(document.getElementById('shareModal'));
+        
+        // Store the listing ID in the modal for later use
+        $('#shareModal').data('listing-id', listingId);
+        shareModal.show();
+    });
+
+    // Handle share options
+    $('.share-option').on('click', function() {
+        const platform = $(this).data('platform');
+        const listingId = $('#shareModal').data('listing-id');
+        
+        $.ajax({
+            url: `/api/marketplace/listings/${listingId}/share`,
+            method: 'POST',
+            success: function(response) {
+                if (response.success) {
+                    const shareUrl = response.shareUrl;
+                    
+                    switch(platform) {
+                        case 'whatsapp':
+                            window.open(`https://wa.me/?text=${encodeURIComponent(shareUrl)}`);
+                            break;
+                        case 'facebook':
+                            window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`);
+                            break;
+                        case 'twitter':
+                            window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}`);
+                            break;
+                        case 'copy':
+                            navigator.clipboard.writeText(shareUrl).then(() => {
+                                alert('Link copied to clipboard!');
+                            });
+                            break;
+                    }
+                    
+                    // Update share count
+                    $(`.share-btn[data-listing-id="${listingId}"] .share-count`).text(response.shares);
+                    
+                    // Close modal
+                    bootstrap.Modal.getInstance(document.getElementById('shareModal')).hide();
+                }
+            },
+            error: function(error) {
+                alert('Error sharing listing: ' + error.responseJSON?.message);
+            }
+        });
+    });
+});
+</script>
+            <script type="text/javascript">
+    function googleTranslateElementInit() {
+        new google.translate.TranslateElement({pageLanguage: 'en', includedLanguages: 'gu,hi,en', layout: google.translate.TranslateElement.InlineLayout.SIMPLE}, 'google_translate_element');
+    }
+</script>
+<script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+{% endblock %}

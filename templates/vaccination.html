@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vaccination Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            padding: 5px 10px;
+            border-radius: 50%;
+            background: red;
+            color: white;
+        }
+        .vaccination-card {
+            transition: transform 0.3s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: none;
+            margin-bottom: 20px;
+        }
+        .vaccination-card:hover {
+            transform: translateY(-5px);
+        }
+        .notification-panel {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        .custom-toast {
+            min-width: 300px;
+        }
+        .navbar {
+            background: linear-gradient(45deg, #2193b0, #6dd5ed);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .navbar-brand, .nav-link {
+            color: white !important;
+        }
+        .nav-link:hover {
+            color: #f0f0f0 !important;
+            transform: translateY(-1px);
+        }
+        .nav-link.active {
+            font-weight: bold;
+            border-bottom: 2px solid white;
+        }
+        .btn-primary {
+            background: linear-gradient(45deg, #2193b0, #6dd5ed);
+            border: none;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .btn-primary:hover {
+            background: linear-gradient(45deg, #1c7a94, #5bb8d0);
+            transform: translateY(-1px);
+        }
+        .card {
+            border: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .card-header {
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-stethoscope"></i> Veterinary Assistant
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/"><i class="fas fa-home"></i> Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/vaccination"><i class="fas fa-syringe"></i> Vaccination</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/livestock"><i class="fas fa-horse"></i> Livestock</a>
+                    </li>
+                            <div id="google_translate_element">
+
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Toast Container for Notifications -->
+        <div class="toast-container"></div>
+        <div class="row">
+            <!-- Vaccination Schedule and Notifications -->
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-bell"></i> Upcoming Vaccinations
+                            <span class="notification-badge" id="notificationCount">0</span>
+                        </h5>
+                    </div>
+                    <div class="card-body notification-panel" id="notificationList">
+                        <!-- Notifications will be dynamically added here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vaccination History -->
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="fas fa-history"></i> Vaccination History</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="vaccinationHistory">
+                            <!-- Vaccination history will be dynamically added here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Appointment Booking Form -->
+        <div class="card mt-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-calendar-plus"></i> Book Vaccination Appointment</h5>
+            </div>
+            <div class="card-body">
+                <form id="appointmentForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Animal ID*</label>
+                                <select class="form-select" id="animal_id" required>
+                                    <option value="">Select Animal</option>
+                                    {% for animal_type, animals in user.livestock_details.items() %}
+                                        {% if animals %}
+                                            <optgroup label="{{ animal_type|title }}">
+                                                {% for animal in animals %}
+                                                    <option value="{{ animal.id }}" 
+                                                            data-type="{{ animal_type }}"
+                                                            data-breed="{{ animal.breed }}">
+                                                        {{ animal.id }} ({{ animal.breed }})
+                                                    </option>
+                                                {% endfor %}
+                                            </optgroup>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Animal Type</label>
+                                <input type="text" class="form-control" id="animalType" disabled>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Breed</label>
+                                <input type="text" class="form-control" id="breed" disabled>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="col-md-6 mb-3">
+                                <label for="age" class="form-label">Age (in years)*</label>
+                                <input type="number" step="0.1" class="form-control" id="age" name="age" required>
+                                <small class="text-muted">Use decimal for partial years (e.g., 1.5 for 1.5 years)</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Vaccination Type</label>
+                                <select class="form-select" id="vaccinationType" required>
+                                    <option value="">Select Vaccination</option>
+                                    <option value="fmd">Foot and Mouth Disease (FMD)</option>
+                                    <option value="brucellosis">Brucellosis</option>
+                                    <option value="anthrax">Anthrax</option>
+                                    <option value="blackquarter">Black Quarter</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Preferred Date</label>
+                                <input type="date" class="form-control" id="appointmentDate" required>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Book Appointment</button>
+                </form>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Function to show toast notification
+        function showToast(message, type = 'error') {
+            const toastContainer = document.querySelector('.toast-container');
+            
+            const toastHtml = `
+                <div class="toast custom-toast" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="toast-header ${type === 'error' ? 'bg-danger' : 'bg-success'} text-white">
+                        <strong class="me-auto">
+                            <i class="fas ${type === 'error' ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i>
+                            ${type === 'error' ? 'Error' : 'Success'}
+                        </strong>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+                    </div>
+                    <div class="toast-body">
+                        ${message}
+                    </div>
+                </div>
+            `;
+            
+            toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+            
+            const toastElement = toastContainer.lastElementChild;
+            const toast = new bootstrap.Toast(toastElement, { autohide: true, delay: 5000 });
+            
+            toast.show();
+            
+            // Remove toast after it's hidden
+            toastElement.addEventListener('hidden.bs.toast', () => {
+                toastElement.remove();
+            });
+        }
+
+        // Function to populate animal details
+        async function populateAnimalDetails(animalId, animalType) {
+            try {
+                const response = await fetch(`/get_animal/${animalType}/${animalId}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const animal = data.animal;
+                    document.getElementById('breed').value = animal.breed;
+                    document.getElementById('age').value = animal.age.toFixed(1);  
+                    document.getElementById('animalType').value = animalType;
+                    
+                    // Enable the form fields
+                    document.getElementById('breed').disabled = false;
+                    document.getElementById('age').disabled = false;
+                    document.getElementById('vaccinationType').disabled = false;
+                    document.getElementById('appointmentDate').disabled = false;
+                } else {
+                    showToast('Error', 'Failed to fetch animal details');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Error', 'Failed to fetch animal details');
+            }
+        }
+
+        // Load notifications and vaccination history
+        async function loadData() {
+            try {
+                const response = await fetch('/get_vaccination_data');
+                if (!response.ok) {
+                    throw new Error('Server error: ' + response.status);
+                }
+                const data = await response.json();
+                
+                if (!data.success && data.error) {
+                    throw new Error(data.error);
+                }
+                
+                // Get appointments and vaccination history
+                const appointments = data.appointments || [];
+                const vaccinations = data.vaccinations || [];
+                
+                // Update the UI
+                updateNotifications(appointments);
+                updateVaccinationHistory(vaccinations);
+            } catch (error) {
+                showToast('Error loading data: ' + error.message);
+            }
+        }
+
+        // Update notifications panel
+        function updateNotifications(appointments) {
+            const notificationList = document.getElementById('notificationList');
+            const notificationCount = document.getElementById('notificationCount');
+            
+            notificationList.innerHTML = '';
+            notificationCount.textContent = appointments.length;
+
+            if (appointments.length === 0) {
+                notificationList.innerHTML = '<div class="alert alert-info">No upcoming vaccinations</div>';
+                return;
+            }
+
+            // Sort appointments by date
+            appointments.sort((a, b) => new Date(a.appointmentDate) - new Date(b.appointmentDate));
+
+            appointments.forEach(appointment => {
+                const appointmentDate = new Date(appointment.appointmentDate);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0); // Reset time part for date comparison
+                
+                const div = document.createElement('div');
+                div.className = 'alert alert-warning mb-2';
+                
+                // Format the date nicely
+                const formattedDate = new Date(appointment.appointmentDate).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+
+                div.innerHTML = `
+                    <h6 class="mb-1">Animal ID: ${appointment.animal_id}</h6>
+                    <p class="mb-1">
+                        <strong>Type:</strong> ${appointment.animal_type}<br>
+                        <strong>Vaccination:</strong> ${appointment.vaccinationType}<br>
+                        <strong>Date:</strong> ${formattedDate}
+                    </p>
+                `;
+
+                // Add complete button if the appointment date is today or has passed
+                if (appointmentDate <= today) {
+                    div.innerHTML += `
+                        <button class="btn btn-sm btn-success mt-2" 
+                                onclick="completeVaccination('${appointment.id}')">
+                            Mark as Complete
+                        </button>
+                    `;
+                } else {
+                    // Show days remaining for future appointments
+                    const daysRemaining = Math.ceil((appointmentDate - today) / (1000 * 60 * 60 * 24));
+                    div.innerHTML += `
+                        <small class="text-muted">
+                            ${daysRemaining} day${daysRemaining !== 1 ? 's' : ''} remaining
+                        </small>
+                    `;
+                }
+
+                notificationList.appendChild(div);
+            });
+        }
+
+        // Function to complete a vaccination
+        async function completeVaccination(appointmentId) {
+            try {
+                const today = new Date().toISOString().split('T')[0];
+                const nextDueDate = new Date();
+                nextDueDate.setMonth(nextDueDate.getMonth() + 6);  // Set next due date to 6 months later
+                
+                const response = await fetch('/complete_vaccination', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        appointmentId: appointmentId,
+                        vaccinationDate: today,
+                        nextDueDate: nextDueDate.toISOString().split('T')[0]
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast('Vaccination marked as complete!', 'success');
+                    loadData();  // Reload the data
+                } else {
+                    throw new Error(data.error || 'Failed to complete vaccination');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Error: ' + error.message);
+            }
+        }
+
+        // Update vaccination history
+        function updateVaccinationHistory(vaccinations) {
+            const historyContainer = document.getElementById('vaccinationHistory');
+            historyContainer.innerHTML = '';
+
+            if (vaccinations.length === 0) {
+                historyContainer.innerHTML = '<div class="alert alert-info">No vaccination history available</div>';
+                return;
+            }
+
+            // Sort vaccinations by date, most recent first
+            vaccinations.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            vaccinations.forEach(record => {
+                const div = document.createElement('div');
+                div.className = 'vaccination-card card mb-3';
+
+                // Format the dates nicely
+                const vaccinationDate = new Date(record.date).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+
+                const nextDueDate = record.nextDueDate ? new Date(record.nextDueDate).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                }) : null;
+
+                div.innerHTML = `
+                    <div class="card-body">
+                        <h5 class="card-title">Animal ID: ${record.animal_id}</h5>
+                        <p class="card-text">
+                            <strong>Type:</strong> ${record.animal_type}<br>
+                            <strong>Vaccination:</strong> ${record.vaccinationType}<br>
+                            <strong>Date:</strong> ${vaccinationDate}<br>
+                            ${nextDueDate ? `<strong>Next Due:</strong> ${nextDueDate}` : ''}
+                        </p>
+                    </div>
+                `;
+                historyContainer.appendChild(div);
+            });
+        }
+
+        // Form validation function
+        function validateForm(formData) {
+            const errors = [];
+            
+            if (!formData.animalId.trim()) {
+                errors.push('Animal ID is required');
+            }
+            if (!formData.animalType) {
+                errors.push('Animal Type is required');
+            }
+            if (!formData.breed.trim()) {
+                errors.push('Breed is required');
+            }
+            if (!formData.age || formData.age <= 0) {
+                errors.push('Please enter a valid age');
+            }
+            if (!formData.vaccinationType) {
+                errors.push('Vaccination Type is required');
+            }
+            if (!formData.appointmentDate) {
+                errors.push('Appointment Date is required');
+            } else {
+                const selectedDate = new Date(formData.appointmentDate);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                if (selectedDate < today) {
+                    errors.push('Appointment date cannot be in the past');
+                }
+            }
+            
+            return errors;
+        }
+
+        // Handle appointment form submission
+        document.getElementById('appointmentForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = {
+                animalId: document.getElementById('animal_id').value,
+                animalType: document.getElementById('animalType').value,
+                breed: document.getElementById('breed').value,
+                age: parseFloat(document.getElementById('age').value),
+                vaccinationType: document.getElementById('vaccinationType').value,
+                appointmentDate: document.getElementById('appointmentDate').value
+            };
+
+            // Validate form data
+            const errors = validateForm(formData);
+            if (errors.length > 0) {
+                showToast(errors.join('\n'));
+                return;
+            }
+
+            try {
+                const response = await fetch('/book_vaccination', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    showToast('Appointment booked successfully!', 'success');
+                    loadData(); // Refresh the data
+                    e.target.reset();
+                } else {
+                    showToast(result.error || 'Failed to book appointment');
+                }
+            } catch (error) {
+                showToast('Error booking appointment: ' + error.message);
+            }
+        });
+
+        // Set minimum date for appointment
+        document.addEventListener('DOMContentLoaded', () => {
+            const dateInput = document.getElementById('appointmentDate');
+            const today = new Date().toISOString().split('T')[0];
+            dateInput.min = today;
+
+            const animalIdSelect = document.getElementById('animal_id');
+            const animalTypeInput = document.getElementById('animalType');
+            const breedInput = document.getElementById('breed');
+            const ageInput = document.getElementById('age');
+
+            // Auto-fill animal details when ID is selected
+            animalIdSelect.addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+                if (selectedOption.value) {
+                    populateAnimalDetails(selectedOption.value, selectedOption.dataset.type);
+                } else {
+                    // Clear fields if no animal selected
+                    animalTypeInput.value = '';
+                    breedInput.value = '';
+                    ageInput.value = '';
+                }
+            });
+
+            loadData();
+        });
+
+        // Refresh data every 5 minutes
+        setInterval(loadData, 300000);
+    </script>
+<script type="text/javascript">
+    function googleTranslateElementInit() {
+        new google.translate.TranslateElement({pageLanguage: 'en', includedLanguages: 'gu,hi,en', layout: google.translate.TranslateElement.InlineLayout.SIMPLE}, 'google_translate_element');
+    }
+</script>
+<script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+</body>
+</html>

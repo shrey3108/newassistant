@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics - Veterinary Assistant</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .navbar {
+            background: linear-gradient(45deg, #2193b0, #6dd5ed);
+        }
+        .card {
+            transition: transform 0.3s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .stat-card {
+            border-radius: 15px;
+            overflow: hidden;
+        }
+        .stat-icon {
+            font-size: 2rem;
+            opacity: 0.8;
+        }
+        .chart-container {
+            height: 300px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-stethoscope"></i> Veterinary Assistant
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/"><i class="fas fa-home"></i> Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/vaccination"><i class="fas fa-syringe"></i> Vaccination</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/livestock"><i class="fas fa-horse"></i> Livestock</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/analytics"><i class="fas fa-chart-line"></i> Analytics</a>
+                    </li>
+                    <div id="google_translate_element">
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h2 class="mb-4"><i class="fas fa-chart-line"></i> Livestock Analytics</h2>
+
+        <!-- Main Analytics Grid -->
+        <div class="row">
+            <!-- Livestock Count -->
+            <div class="col-md-3 mb-4">
+                <div class="card h-100 stat-card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-horse"></i> Livestock Count</h5>
+                    </div>
+                    <div class="card-body" id="livestockCount">
+                        <div class="text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Health Statistics -->
+            <div class="col-md-3 mb-4">
+                <div class="card h-100 stat-card">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="fas fa-heartbeat"></i> Health Status</h5>
+                    </div>
+                    <div class="card-body" id="healthStats">
+                        <div class="text-center">
+                            <div class="spinner-border text-success" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Age Distribution -->
+            <div class="col-md-3 mb-4">
+                <div class="card h-100 stat-card">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="fas fa-calendar"></i> Age Distribution</h5>
+                    </div>
+                    <div class="card-body" id="ageDistribution">
+                        <div class="text-center">
+                            <div class="spinner-border text-info" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vaccination Status -->
+            <div class="col-md-3 mb-4">
+                <div class="card h-100 stat-card">
+                    <div class="card-header bg-warning text-white">
+                        <h5 class="mb-0"><i class="fas fa-syringe"></i> Vaccination Status</h5>
+                    </div>
+                    <div class="card-body" id="vaccinationStatus">
+                        <div class="text-center">
+                            <div class="spinner-border text-warning" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Health Records -->
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="mb-0"><i class="fas fa-notes-medical"></i> Recent Health Records</h5>
+                    </div>
+                    <div class="card-body" id="recentHealthRecords">
+                        <div class="text-center">
+                            <div class="spinner-border text-secondary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Function to load analytics data
+        async function loadAnalytics() {
+            try {
+                console.log('Fetching analytics data...'); // Debug log
+                const response = await fetch('/get_analytics');
+                const data = await response.json();
+                console.log('Received data:', data); // Debug log
+
+                if (data.error) {
+                    console.error('Server error:', data.error);
+                    document.getElementById('livestockCount').innerHTML = 
+                        '<div class="text-center text-danger">Error loading data</div>';
+                    document.getElementById('healthStats').innerHTML = 
+                        '<div class="text-center text-danger">Error loading data</div>';
+                    document.getElementById('ageDistribution').innerHTML = 
+                        '<div class="text-center text-danger">Error loading data</div>';
+                    document.getElementById('vaccinationStatus').innerHTML = 
+                        '<div class="text-center text-danger">Error loading data</div>';
+                    document.getElementById('recentHealthRecords').innerHTML = 
+                        '<div class="text-center text-danger">Error loading data</div>';
+                    return;
+                }
+
+                // Update Livestock Count
+                console.log('Updating livestock count...'); // Debug log
+                const livestockHtml = Object.entries(data.livestock_count)
+                    .map(([type, count]) => `
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="h6 mb-0">${type.charAt(0).toUpperCase() + type.slice(1)}</span>
+                            <span class="badge bg-primary rounded-pill">${count}</span>
+                        </div>
+                    `).join('');
+                document.getElementById('livestockCount').innerHTML = livestockHtml || 
+                    '<div class="text-center text-muted">No livestock data available</div>';
+
+                // Update Health Statistics
+                console.log('Updating health statistics...'); // Debug log
+                const healthHtml = Object.entries(data.health_statistics)
+                    .map(([status, count]) => `
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="h6 mb-0">${status.charAt(0).toUpperCase() + status.slice(1)}</span>
+                            <span class="badge bg-${getHealthStatusColor(status)} rounded-pill">${count}</span>
+                        </div>
+                    `).join('');
+                document.getElementById('healthStats').innerHTML = healthHtml || 
+                    '<div class="text-center text-muted">No health data available</div>';
+
+                // Update Age Distribution
+                console.log('Updating age distribution...'); // Debug log
+                const ageHtml = Object.entries(data.age_distribution)
+                    .map(([range, count]) => `
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="h6 mb-0">${range} years</span>
+                            <span class="badge bg-info rounded-pill">${count}</span>
+                        </div>
+                    `).join('');
+                document.getElementById('ageDistribution').innerHTML = ageHtml || 
+                    '<div class="text-center text-muted">No age data available</div>';
+
+                // Update Vaccination Status
+                console.log('Updating vaccination status...'); // Debug log
+                const vaccinationHtml = `
+                    <div class="text-center">
+                        <h2 class="display-4 mb-0">${data.vaccination_due}</h2>
+                        <p class="text-muted mb-0">Vaccinations Due</p>
+                        <small class="text-muted">(Next 30 days)</small>
+                    </div>
+                `;
+                document.getElementById('vaccinationStatus').innerHTML = vaccinationHtml;
+
+                // Update Recent Health Records
+                console.log('Updating health records...', data.recent_health_records); // Debug log
+                if (!Array.isArray(data.recent_health_records)) {
+                    console.error('Health records is not an array:', data.recent_health_records);
+                    document.getElementById('recentHealthRecords').innerHTML = 
+                        '<div class="text-center text-danger">Error: Invalid data format</div>';
+                    return;
+                }
+
+                const recordsHtml = data.recent_health_records.length > 0 ?
+                    data.recent_health_records.map(record => {
+                        try {
+                            return `
+                                <div class="border-bottom pb-3 mb-3">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <strong class="d-block">${record.animal_id || 'Unknown'}</strong>
+                                            <small class="text-muted">${record.animal_type || 'Unknown'}</small>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <span class="badge bg-${getConditionColor(record.condition || 'unknown')}">${record.condition || 'Unknown'}</span>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <small class="text-muted">${record.symptoms || 'No symptoms recorded'}</small>
+                                        </div>
+                                        <div class="col-md-2 text-end">
+                                            <small class="text-muted">${formatDate(record.date)}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        } catch (error) {
+                            console.error('Error formatting record:', error, record);
+                            return '';
+                        }
+                    }).join('') :
+                    '<div class="text-center text-muted">No recent health records available</div>';
+                
+                document.getElementById('recentHealthRecords').innerHTML = recordsHtml || 
+                    '<div class="text-center text-muted">No recent health records available</div>';
+
+            } catch (error) {
+                console.error('Error loading analytics:', error);
+                document.getElementById('recentHealthRecords').innerHTML = 
+                    '<div class="text-center text-danger">Error loading health records</div>';
+            }
+        }
+
+        // Helper function for health status colors
+        function getHealthStatusColor(status) {
+            const colors = {
+                'healthy': 'success',
+                'sick': 'danger',
+                'recovering': 'warning'
+            };
+            return colors[status.toLowerCase()] || 'secondary';
+        }
+
+        // Helper function for condition colors
+        function getConditionColor(condition) {
+            const colors = {
+                'critical': 'danger',
+                'stable': 'success',
+                'improving': 'info',
+                'deteriorating': 'warning'
+            };
+            return colors[condition.toLowerCase()] || 'secondary';
+        }
+
+        // Helper function to format date
+        function formatDate(dateString) {
+            try {
+                if (!dateString) return 'Date not available';
+                const date = new Date(dateString);
+                if (isNaN(date.getTime())) return dateString; // Return original string if invalid date
+                return date.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+            } catch (error) {
+                console.error('Error formatting date:', error);
+                return 'Date error';
+            }
+        }
+
+        // Load analytics when the page loads
+        document.addEventListener('DOMContentLoaded', loadAnalytics);
+
+        // Refresh analytics every 5 minutes
+        setInterval(loadAnalytics, 300000);
+    </script>
+
+<script type="text/javascript">
+    function googleTranslateElementInit() {
+        new google.translate.TranslateElement({pageLanguage: 'en', includedLanguages: 'gu,hi,en', layout: google.translate.TranslateElement.InlineLayout.SIMPLE}, 'google_translate_element');
+    }
+</script>
+<script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+</body>
+</html>

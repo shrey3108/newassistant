@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Disease Map - Veterinary Assistant</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <style>
+        #map {
+            height: 600px;
+            width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .filter-section {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .legend {
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-stethoscope"></i> Veterinary Assistant
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/"><i class="fas fa-home"></i> Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/vaccination"><i class="fas fa-syringe"></i> Vaccination</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/livestock"><i class="fas fa-horse"></i> Livestock</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/disease-map"><i class="fas fa-map-marked-alt"></i> Disease Map</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h2 class="mb-4"><i class="fas fa-map-marked-alt"></i> Disease Map</h2>
+        
+        <!-- Filters -->
+        <div class="filter-section">
+            <div class="row">
+                <div class="col-md-3">
+                    <label class="form-label">Disease Type</label>
+                    <select class="form-select" id="diseaseFilter">
+                        <option value="">All Diseases</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Severity</label>
+                    <select class="form-select" id="severityFilter">
+                        <option value="">All Severities</option>
+                        <option value="Contagious">Contagious</option>
+                        <option value="Severe">Severe</option>
+                        <option value="Normal">Normal</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">State</label>
+                    <select class="form-select" id="stateFilter">
+                        <option value="">All States</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Date Range</label>
+                    <select class="form-select" id="dateFilter">
+                        <option value="7">Last 7 days</option>
+                        <option value="30">Last 30 days</option>
+                        <option value="90">Last 90 days</option>
+                        <option value="all">All time</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Map Container -->
+        <div id="map"></div>
+
+        <!-- Legend -->
+        <div class="legend mt-3">
+            <h6>Disease Severity</h6>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #ff4444;"></div>
+                <span>Contagious</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #ffbb33;"></div>
+                <span>Severe</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #00C851;"></div>
+                <span>Normal</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script>
+        // Initialize map
+        const map = L.map('map').setView([20.5937, 78.9629], 5); // Center on India
+
+        // Add tile layer (OpenStreetMap)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: ' OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Function to get marker color based on condition
+        function getMarkerColor(condition) {
+            switch(condition) {
+                case 'Contagious': return '#ff4444';
+                case 'Severe': return '#ffbb33';
+                case 'Normal': return '#00C851';
+                default: return '#2196F3';
+            }
+        }
+
+        // Function to populate states dropdown
+        function populateStates() {
+            fetch('/api/states')
+                .then(response => response.json())
+                .then(states => {
+                    const stateFilter = document.getElementById('stateFilter');
+                    stateFilter.innerHTML = '<option value="">All States</option>';
+                    states.forEach(state => {
+                        const option = document.createElement('option');
+                        option.value = state;
+                        option.textContent = state;
+                        stateFilter.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('Error loading states:', error));
+        }
+
+        // Function to populate disease types
+        function populateDiseases() {
+            fetch('/api/diseases')
+                .then(response => response.json())
+                .then(diseases => {
+                    const diseaseFilter = document.getElementById('diseaseFilter');
+                    diseaseFilter.innerHTML = '<option value="">All Diseases</option>';
+                    diseases.forEach(disease => {
+                        const option = document.createElement('option');
+                        option.value = disease;
+                        option.textContent = disease;
+                        diseaseFilter.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('Error loading diseases:', error));
+        }
+
+        // Update loadDiseaseData function to include state filter
+        function loadDiseaseData() {
+            const diseaseType = document.getElementById('diseaseFilter').value;
+            const severity = document.getElementById('severityFilter').value;
+            const state = document.getElementById('stateFilter').value;
+            const dateRange = document.getElementById('dateFilter').value;
+
+            // Clear existing markers
+            map.eachLayer((layer) => {
+                if (layer instanceof L.CircleMarker) {
+                    map.removeLayer(layer);
+                }
+            });
+
+            console.log('Fetching disease data...'); // Debug log
+            console.log('Filters:', { diseaseType, severity, state, dateRange }); // Debug log
+
+            // Update the fetch URL to include state
+            fetch(`/api/disease-data?disease=${diseaseType}&severity=${severity}&state=${state}&days=${dateRange}`)
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Received data:', data); // Debug log
+
+                    if (data.error) {
+                        console.error('Server error:', data.error);
+                        return;
+                    }
+
+                    data.forEach(record => {
+                        if (record.lat && record.lng) {  // Only create markers if coordinates exist
+                        const marker = L.circleMarker([record.lat, record.lng], {
+                            radius: 8,
+                            fillColor: getMarkerColor(record.condition),
+                            color: '#fff',
+                            weight: 1,
+                            opacity: 1,
+                            fillOpacity: 0.8
+                        });
+
+                        const popupContent = `
+                            <div class="popup-content">
+                                    <h6 class="mb-2">${record.location || 'Unknown Location'}</h6>
+                                <p class="mb-1"><strong>Disease:</strong> ${record.diagnosis}</p>
+                                <p class="mb-1"><strong>Severity:</strong> <span class="badge ${record.condition === 'Contagious' ? 'bg-danger' : record.condition === 'Severe' ? 'bg-warning text-dark' : 'bg-success'}">${record.condition}</span></p>
+                                <p class="mb-1"><strong>Cases:</strong> ${record.cases}</p>
+                                    <p class="mb-0"><strong>Date:</strong> ${record.timestamp ? new Date(record.timestamp).toLocaleDateString() : 'Unknown'}</p>
+                            </div>
+                        `;
+
+                        marker.bindPopup(popupContent);
+                        marker.addTo(map);
+                            console.log('Added marker at:', record.lat, record.lng); // Debug log
+                        }
+                    });
+                })
+                .catch(error => console.error('Error loading disease data:', error));
+        }
+
+        // Call these functions when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            populateStates();
+            populateDiseases();
+            loadDiseaseData();
+        });
+
+        // Add event listeners to filters
+        document.getElementById('diseaseFilter').addEventListener('change', loadDiseaseData);
+        document.getElementById('severityFilter').addEventListener('change', loadDiseaseData);
+        document.getElementById('stateFilter').addEventListener('change', loadDiseaseData);
+        document.getElementById('dateFilter').addEventListener('change', loadDiseaseData);
+    </script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: veterinary-assistant
+    env: python
+    buildCommand: |
+      apt-get update && apt-get install -y espeak
+      curl -sSL https://install.python-poetry.org | python3 -
+      poetry config virtualenvs.create false
+      poetry install --no-dev
+      mkdir -p uploads
+      mkdir -p static/uploads/animals
+    startCommand: gunicorn app:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.9.0
+      - key: POETRY_VERSION
+        value: 1.7.1
+      - key: GOOGLE_API_KEY
+        sync: false
+      - key: MONGODB_URI
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+    autoDeploy: true
+    disk:
+      name: uploads
+      mountPath: /uploads
+      sizeGB: 1

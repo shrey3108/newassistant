@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animal Records</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .navbar {
+            background: linear-gradient(45deg, #2193b0, #6dd5ed);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .navbar-brand, .nav-link {
+            color: white !important;
+        }
+        .nav-link:hover {
+            color: #f0f0f0 !important;
+            transform: translateY(-1px);
+        }
+        .record-card {
+            transition: transform 0.3s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: none;
+            margin-bottom: 20px;
+        }
+        .record-card:hover {
+            transform: translateY(-5px);
+        }
+        .filter-section {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .status-badge {
+            font-size: 0.9em;
+            padding: 5px 10px;
+        }
+        .timeline {
+            position: relative;
+            padding: 20px 0;
+        }
+        .timeline-item {
+            padding: 20px;
+            border-left: 2px solid #2193b0;
+            position: relative;
+            margin-bottom: 20px;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -8px;
+            top: 24px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #2193b0;
+        }
+    </style>
+</head>
+<body>
+
+        <div id="google_translate_element">
+
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-stethoscope"></i> Veterinary Assistant
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/"><i class="fas fa-home"></i> Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/vaccination"><i class="fas fa-syringe"></i> Vaccination</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/livestock"><i class="fas fa-horse"></i> Livestock</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/analytics"><i class="fas fa-chart-line"></i> Analytics</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/records"><i class="fas fa-folder-open"></i> Records</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Filter Section -->
+        <div class="filter-section mb-4">
+            <div class="row">
+                <div class="col-md-3">
+                    <select class="form-select" id="animalType">
+                        <option value="">All Animal Types</option>
+                        <option value="cow">Cow</option>
+                        <option value="buffalo">Buffalo</option>
+                        <option value="goat">Goat</option>
+                        <option value="sheep">Sheep</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="recordType">
+                        <option value="">All Record Types</option>
+                        <option value="health">Health Records</option>
+                        <option value="vaccination">Vaccination Records</option>
+                        <option value="treatment">Treatment Records</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="searchInput" placeholder="Search records...">
+                        <button class="btn btn-primary" type="button" id="searchButton">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-primary w-100" id="exportButton">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div id="totalRecords" class="text-muted">
+                            <!-- Total records count will be displayed here -->
+                        </div>
+                        <div id="filteredRecords" class="text-muted">
+                            <!-- Filtered records count will be displayed here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Records Timeline -->
+        <div class="timeline" id="recordsTimeline">
+            <!-- Records will be loaded here dynamically -->
+        </div>
+
+        <!-- No Records Message -->
+        <div id="noRecordsMessage" class="text-center py-5" style="display: none;">
+            <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+            <h4 class="text-muted">No Records Found</h4>
+            <p class="text-muted">There are no records matching your search criteria.</p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Function to format date
+        function formatDate(dateString) {
+            try {
+                if (!dateString) return 'Date not available';
+                
+                // Try parsing the date string
+                const date = new Date(dateString);
+                if (isNaN(date.getTime())) {
+                    // If parsing fails, return the original string
+                    return dateString;
+                }
+                
+                // Format the date
+                return new Intl.DateTimeFormat('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }).format(date);
+            } catch (error) {
+                console.error('Error formatting date:', error);
+                return dateString || 'Date not available';
+            }
+        }
+
+        // Function to get status badge color
+        function getStatusBadgeClass(status) {
+            status = status.toLowerCase();
+            switch (status) {
+                case 'completed':
+                    return 'success';
+                case 'scheduled':
+                    return 'primary';
+                case 'healthy':
+                    return 'success';
+                case 'sick':
+                    return 'danger';
+                case 'recovering':
+                    return 'warning';
+                default:
+                    return 'secondary';
+            }
+        }
+
+        // Function to load records
+        async function loadRecords() {
+            try {
+                const response = await fetch('/get_all_records');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const timeline = document.getElementById('recordsTimeline');
+                    const noRecordsMessage = document.getElementById('noRecordsMessage');
+                    const totalRecordsDiv = document.getElementById('totalRecords');
+                    
+                    // Update total records count
+                    totalRecordsDiv.textContent = `Total Records: ${data.total_records}`;
+                    
+                    if (data.records.length === 0) {
+                        timeline.style.display = 'none';
+                        noRecordsMessage.style.display = 'block';
+                        return;
+                    }
+                    
+                    timeline.style.display = 'block';
+                    noRecordsMessage.style.display = 'none';
+                    timeline.innerHTML = ''; // Clear existing records
+                    
+                    data.records.forEach(record => {
+                        const timelineItem = document.createElement('div');
+                        timelineItem.className = 'timeline-item';
+                        
+                        let statusBadge = '';
+                        if (record.status) {
+                            const statusClass = getStatusBadgeClass(record.status);
+                            statusBadge = `<span class="badge bg-${statusClass} status-badge">${record.status}</span>`;
+                        }
+                        
+                        // Format the details section based on record type
+                        let details = record.details || '';
+                        if (record.record_type === 'vaccination') {
+                            if (record.status === 'Scheduled') {
+                                details = `<strong>Upcoming Vaccination:</strong> ${details.replace('Scheduled vaccination: ', '')}`;
+                            } else {
+                                const [vaccine, nextDue] = details.split(', Next Due: ');
+                                details = `
+                                    <strong>${vaccine}</strong>
+                                    ${nextDue ? `<br><span class="text-muted">Next Due: ${nextDue}</span>` : ''}
+                                `;
+                            }
+                        }
+                        
+                        timelineItem.innerHTML = `
+                            <div class="d-flex justify-content-between align-items-start">
+                                <h5 class="mb-1">
+                                    ${record.animal_type.charAt(0).toUpperCase() + record.animal_type.slice(1)} - ${record.animal_id}
+                                    ${statusBadge}
+                                </h5>
+                                <small class="text-muted">${formatDate(record.date || record.timestamp)}</small>
+                            </div>
+                            <p class="mb-1">${record.record_type.charAt(0).toUpperCase() + record.record_type.slice(1)} Record</p>
+                            <div class="mb-0">${details}</div>
+                        `;
+                        
+                        timeline.appendChild(timelineItem);
+                    });
+                    
+                    // Initialize filter counts
+                    filterRecords();
+                } else {
+                    console.error('Error loading records:', data.error);
+                    document.getElementById('recordsTimeline').innerHTML = 
+                        '<div class="alert alert-danger">Error loading records. Please try again later.</div>';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('recordsTimeline').innerHTML = 
+                    '<div class="alert alert-danger">Error loading records. Please try again later.</div>';
+            }
+        }
+
+        // Filter records
+        function filterRecords() {
+            const animalType = document.getElementById('animalType').value.toLowerCase();
+            const recordType = document.getElementById('recordType').value.toLowerCase();
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            
+            const timelineItems = document.querySelectorAll('.timeline-item');
+            let visibleCount = 0;
+            
+            timelineItems.forEach(item => {
+                const itemText = item.textContent.toLowerCase();
+                const matchesAnimalType = !animalType || itemText.includes(animalType);
+                const matchesRecordType = !recordType || itemText.includes(recordType);
+                const matchesSearch = !searchTerm || itemText.includes(searchTerm);
+                
+                const isVisible = matchesAnimalType && matchesRecordType && matchesSearch;
+                item.style.display = isVisible ? 'block' : 'none';
+                if (isVisible) visibleCount++;
+            });
+            
+            // Update filtered records count
+            const filteredRecordsDiv = document.getElementById('filteredRecords');
+            if (visibleCount !== timelineItems.length) {
+                filteredRecordsDiv.textContent = `Showing ${visibleCount} of ${timelineItems.length} records`;
+            } else {
+                filteredRecordsDiv.textContent = '';
+            }
+            
+            // Show/hide no records message
+            const timeline = document.getElementById('recordsTimeline');
+            const noRecordsMessage = document.getElementById('noRecordsMessage');
+            
+            if (visibleCount === 0) {
+                timeline.style.display = 'none';
+                noRecordsMessage.style.display = 'block';
+            } else {
+                timeline.style.display = 'block';
+                noRecordsMessage.style.display = 'none';
+            }
+        }
+
+        // Event listeners
+        document.getElementById('animalType').addEventListener('change', filterRecords);
+        document.getElementById('recordType').addEventListener('change', filterRecords);
+        document.getElementById('searchInput').addEventListener('input', filterRecords);
+        document.getElementById('searchButton').addEventListener('click', filterRecords);
+        
+        // Export records
+        document.getElementById('exportButton').addEventListener('click', async () => {
+            try {
+                const response = await fetch('/export_records');
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'animal_records.csv';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                a.remove();
+            } catch (error) {
+                console.error('Error exporting records:', error);
+            }
+        });
+
+        // Load records when page loads
+        document.addEventListener('DOMContentLoaded', loadRecords);
+    </script>
+            <script type="text/javascript">
+    function googleTranslateElementInit() {
+        new google.translate.TranslateElement({pageLanguage: 'en', includedLanguages: 'gu,hi,en', layout: google.translate.TranslateElement.InlineLayout.SIMPLE}, 'google_translate_element');
+    }
+</script>
+<script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+</body>
+</html>

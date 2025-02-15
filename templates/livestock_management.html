@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Livestock Management - Veterinary Assistant</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .navbar {
+            background: linear-gradient(45deg, #2193b0, #6dd5ed);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .navbar-brand, .nav-link {
+            color: white !important;
+        }
+        .nav-link:hover {
+            color: #f0f0f0 !important;
+            transform: translateY(-1px);
+        }
+        .livestock-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: transform 0.3s;
+        }
+        .livestock-card:hover {
+            transform: translateY(-5px);
+        }
+        .animal-id {
+            background: linear-gradient(45deg, #2193b0, #6dd5ed);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .btn-add {
+            background: linear-gradient(45deg, #2193b0, #6dd5ed);
+            border: none;
+            color: white;
+        }
+        .btn-add:hover {
+            background: linear-gradient(45deg, #1c7a94, #5bb8d0);
+            color: white;
+        }
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        .animal-type-header {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+        }
+        .animal-type-header i {
+            font-size: 24px;
+            margin-right: 10px;
+            color: #2193b0;
+        }
+        .remaining-count {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+        .animal-type-section {
+            background: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .animal-type-header {
+            border-bottom: 2px solid #eee;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+        .card {
+            transition: transform 0.2s;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .btn-add {
+            background: linear-gradient(45deg, #2193b0, #6dd5ed);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+        }
+        .btn-add:hover {
+            background: linear-gradient(45deg, #1c7a94, #5bb8cc);
+            color: white;
+        }
+        .btn-edit {
+            color: #2193b0;
+            background: none;
+            border: none;
+        }
+        .btn-delete {
+            color: #dc3545;
+            background: none;
+            border: none;
+        }
+        .remaining-count {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        .no-image-placeholder {
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        .animal-image {
+            border-radius: 5px;
+        }
+        .health-records {
+            margin-top: 20px;
+        }
+        .health-record {
+            margin-bottom: 10px;
+        }
+        .btn-group .btn {
+            padding: 0.25rem 0.5rem;
+            margin: 0 2px;
+        }
+        .btn-group .btn i {
+            font-size: 1rem;
+        }
+        .btn-group .btn:hover {
+            opacity: 0.8;
+        }
+        [title] {
+            position: relative;
+        }
+        [title]:hover:after {
+            content: attr(title);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-stethoscope"></i> Veterinary Assistant
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/"><i class="fas fa-home"></i> Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/vaccination"><i class="fas fa-syringe"></i> Vaccination</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/livestock"><i class="fas fa-horse"></i> Livestock</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/disease-map"><i class="fas fa-map-marked-alt"></i> Disease Map</a>
+                    </li>
+                </ul>
+                <div class="dropdown">
+                    <button class="btn btn-link nav-link dropdown-toggle" type="button" id="profileDropdown" data-bs-toggle="dropdown">
+                        <i class="fas fa-user-circle"></i> {{ user.full_name }}
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="/profile"><i class="fas fa-id-card"></i> Profile</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="/logout"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="toast-container" id="toastContainer"></div>
+
+        <!-- Livestock Management -->
+        <div class="row">
+            <div class="col-md-12 mb-4">
+                <h2><i class="fas fa-horse"></i> Livestock Management</h2>
+                <p class="text-muted">Manage your livestock information and track individual animals</p>
+            </div>
+        </div>
+
+        <!-- Animal Type Sections -->
+        {% for animal_type, plural in [('cow', 'cows'), ('buffalo', 'buffaloes'), ('goat', 'goats'), ('sheep', 'sheep')] %}
+        <div class="animal-type-section mb-4" data-type="{{ animal_type }}">
+            <div class="animal-type-header d-flex justify-content-between align-items-center">
+                <div>
+                    <i class="fas fa-{{ animal_type }}"></i>
+                    <span class="h4 mb-0">{{ plural|title }}</span>
+                </div>
+                <div>
+                    <span class="remaining-count">
+                        Registered: {{ user.livestock_details[animal_type]|length }}/{{ user.livestock[plural] }}
+                    </span>
+                    {% if user.livestock_details[animal_type]|length < user.livestock[plural] %}
+                    <button class="btn btn-add ms-3" onclick="showAddAnimalModal('{{ animal_type }}')">
+                        <i class="fas fa-plus"></i> Add {{ animal_type|title }}
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="row">
+                {% for animal in user.livestock_details[animal_type] %}
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-img-top text-center p-2">
+                            {% if animal.image_url %}
+                            <img src="{{ animal.image_url }}" alt="Animal" class="animal-image img-fluid" style="max-height: 200px; object-fit: cover;">
+                            {% else %}
+                            <div class="no-image-placeholder">
+                                <i class="fas fa-camera fa-3x text-muted"></i>
+                                <p class="text-muted">No image available</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between mb-3">
+                                <h5 class="card-title">ID: {{ animal.id }}</h5>
+                                <div class="btn-group">
+                                    <button class="btn btn-sm btn-edit" onclick="editAnimal(this)" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-delete" onclick="deleteAnimal(this)" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-info" onclick="addHealthRecord(this)" title="Add Health Record">
+                                        <i class="fas fa-plus-circle"></i>
+                                    </button>
+                                    <a href="/download_animal_record/{{ animal_type.lower() }}/{{ animal.id }}" 
+                                       class="btn btn-sm btn-secondary" 
+                                       title="Download Record"
+                                       target="_blank">
+                                        <i class="fas fa-download"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            <ul class="list-unstyled">
+                                <li><strong>Breed:</strong> {{ animal.breed }}</li>
+                                <li><strong>Age:</strong> {{ "%.1f"|format(animal.age) }} years</li>
+                                <li><strong>Weight:</strong> {{ animal.weight }} kg</li>
+                            </ul>
+
+                            <!-- Health Records Section -->
+                            <div class="health-records mt-3">
+                                <h6 class="border-bottom pb-2">Health Records</h6>
+                                <div class="health-records-list" data-animal-id="{{ animal.id }}">
+                                    {% if animal.health_history %}
+                                        {% for record in animal.health_history|sort(attribute='timestamp', reverse=true) %}
+                                        <div class="health-record card mb-2">
+                                            <div class="card-body py-2">
+                                                <small class="text-muted d-block mb-1">{{ record.timestamp.strftime('%Y-%m-%d %H:%M') }}</small>
+                                                <p class="mb-1"><strong>Condition:</strong> <span class="badge {% if record.condition == 'Contagious' %}bg-danger{% elif record.condition == 'Severe' %}bg-warning{% else %}bg-success{% endif %}">{{ record.condition }}</span></p>
+                                                <p class="mb-1"><strong>Symptoms:</strong> {{ record.symptoms }}</p>
+                                                <p class="mb-1"><strong>Diagnosis:</strong> {{ record.diagnosis }}</p>
+                                                <p class="mb-1"><strong>Treatment:</strong> {{ record.treatment }}</p>
+                                                {% if record.notes %}
+                                                <p class="mb-0"><strong>Notes:</strong> {{ record.notes }}</p>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    {% else %}
+                                        <p class="text-muted small">No health records yet</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Add/Edit Animal Modal -->
+    <div class="modal fade" id="animalModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">Add New Animal</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="animalForm" enctype="multipart/form-data">
+                        <input type="hidden" id="animalType" name="type">
+                        <input type="hidden" id="editId" name="editId">
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="animalId">Animal ID*</label>
+                                    <input type="text" class="form-control" id="animalId" name="id" required>
+                                    <small class="text-muted">Enter a unique identifier for this animal</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="breed">Breed*</label>
+                                    <input type="text" class="form-control" id="breed" name="breed" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="age">Age (in years)*</label>
+                                    <input type="number" step="0.1" class="form-control" id="age" name="age" required>
+                                    <small class="text-muted">Use decimal for partial years (e.g., 1.5 for 1.5 years)</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="weight">Weight (in kg)*</label>
+                                    <input type="number" step="0.1" class="form-control" id="weight" name="weight" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="color">Color*</label>
+                                    <input type="text" class="form-control" id="color" name="color" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="gender">Gender*</label>
+                                    <select class="form-control" id="gender" name="gender" required>
+                                        <option value="">Select Gender</option>
+                                        <option value="male">Male</option>
+                                        <option value="female">Female</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="health_status">Health Status*</label>
+                            <select class="form-control" id="health_status" name="health_status" required>
+                                <option value="">Select Health Status</option>
+                                <option value="healthy">Healthy</option>
+                                <option value="sick">Sick</option>
+                                <option value="recovering">Recovering</option>
+                                <option value="pregnant">Pregnant</option>
+                                <option value="lactating">Lactating</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="notes">Additional Notes</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="image">Animal Image (Optional)</label>
+                            <input type="file" class="form-control" id="image" name="image" accept="image/*">
+                            <small class="text-muted">Upload a clear photo of the animal (max 5MB)</small>
+                        </div>
+
+                        <div id="currentImageDiv" class="mb-3 d-none">
+                            <label>Current Image:</label>
+                            <img id="currentImage" src="" alt="Current animal image" class="img-fluid mb-2" style="max-height: 200px;">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="removeImage" name="removeImage">
+                                <label class="form-check-label" for="removeImage">
+                                    Remove current image
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveAnimal()">Save Animal</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Health Record Modal -->
+    <div class="modal fade" id="healthRecordModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <form id="healthRecordForm">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Add Health Record</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" id="health_animal_id" name="health_animal_id">
+                        <input type="hidden" id="health_animal_type" name="health_animal_type">
+                        
+                        <div class="mb-3">
+                            <label for="symptoms" class="form-label">Symptoms</label>
+                            <textarea class="form-control" id="symptoms" name="symptoms" rows="3" required></textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="location" class="form-label">Location</label>
+                            <select class="form-select" id="location" name="location" required>
+                                <option value="">Select State</option>
+                                <option value="Andhra Pradesh">Andhra Pradesh</option>
+                                <option value="Gujarat">Gujarat</option>
+                                <option value="Karnataka">Karnataka</option>
+                                <option value="Maharashtra">Maharashtra</option>
+                                <option value="Punjab">Punjab</option>
+                                <option value="Rajasthan">Rajasthan</option>
+                                <option value="Tamil Nadu">Tamil Nadu</option>
+                                <option value="Uttar Pradesh">Uttar Pradesh</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="condition" class="form-label">Condition</label>
+                            <select class="form-select" id="condition" name="condition" required>
+                                <option value="">Select Condition</option>
+                                <option value="Contagious">Contagious</option>
+                                <option value="Severe">Severe</option>
+                                <option value="Normal">Normal</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">Additional Notes</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="2"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Save Record</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function showAddAnimalModal(type) {
+            document.getElementById('animalType').value = type;
+            document.getElementById('editId').value = '';
+            document.getElementById('animalForm').reset();
+            document.getElementById('currentImageDiv').classList.add('d-none');
+            document.getElementById('modalTitle').textContent = `Add New ${type.charAt(0).toUpperCase() + type.slice(1)}`;
+            new bootstrap.Modal(document.getElementById('animalModal')).show();
+        }
+
+        function editAnimal(btn) {
+            const card = btn.closest('.card');
+            const type = card.closest('.animal-type-section').dataset.type;
+            const id = card.querySelector('.card-title').textContent.split(':')[1].trim();
+            
+            fetch(`/get_animal/${type}/${id}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const animal = data.animal;
+                        document.getElementById('animalType').value = type;
+                        document.getElementById('editId').value = id;
+                        document.getElementById('animalId').value = id;
+                        document.getElementById('breed').value = animal.breed;
+                        document.getElementById('age').value = animal.age;
+                        document.getElementById('weight').value = animal.weight;
+                        document.getElementById('color').value = animal.color;
+                        document.getElementById('gender').value = animal.gender;
+                        document.getElementById('health_status').value = animal.health_status;
+                        document.getElementById('notes').value = animal.notes || '';
+                        
+                        const currentImageDiv = document.getElementById('currentImageDiv');
+                        const currentImage = document.getElementById('currentImage');
+                        if (animal.image_url) {
+                            currentImage.src = animal.image_url;
+                            currentImageDiv.classList.remove('d-none');
+                        } else {
+                            currentImageDiv.classList.add('d-none');
+                        }
+                        
+                        document.getElementById('modalTitle').textContent = `Edit ${type.charAt(0).toUpperCase() + type.slice(1)}`;
+                        new bootstrap.Modal(document.getElementById('animalModal')).show();
+                    } else {
+                        showToast('error', data.error || 'Error loading animal details');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showToast('error', 'Error loading animal details');
+                });
+        }
+
+        function deleteAnimal(btn) {
+            const card = btn.closest('.card');
+            const type = card.closest('.animal-type-section').dataset.type;
+            const id = card.querySelector('.card-title').textContent.split(':')[1].trim();
+            
+            if (confirm('Are you sure you want to delete this animal?')) {
+                fetch('/delete_animal', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        type: type,
+                        id: id
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        card.remove();
+                        showToast('success', 'Animal deleted successfully');
+                        // Update the count display
+                        const section = document.querySelector(`[data-type="${type}"]`);
+                        const countDisplay = section.querySelector('.remaining-count');
+                        const [current, total] = countDisplay.textContent.split('/');
+                        const newCount = parseInt(current) - 1;
+                        countDisplay.textContent = `${newCount}/${total}`;
+                        
+                        // Show the add button if it was hidden
+                        const addButton = section.querySelector('.btn-add');
+                        if (addButton.style.display === 'none') {
+                            addButton.style.display = '';
+                        }
+                    } else {
+                        showToast('error', data.error || 'Failed to delete animal');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showToast('error', 'Error deleting animal');
+                });
+            }
+        }
+
+        function saveAnimal() {
+            const form = document.getElementById('animalForm');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+            
+            const formData = new FormData(form);
+            
+            // Add the current type
+            formData.append('type', document.getElementById('animalType').value);
+            
+            // Validate ID format
+            const animalId = formData.get('id');
+            if (!animalId) {
+                showToast('error', 'Please enter an animal ID');
+                return;
+            }
+            
+            fetch('/save_animal', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                    showToast('success', 'Animal saved successfully');
+                } else {
+                    showToast('error', data.error || 'Failed to save animal');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('error', 'Error saving animal');
+            });
+        }
+
+        function addHealthRecord(btn) {
+            const card = btn.closest('.card');
+            // Get animal ID from the card title, removing any whitespace
+            const animalId = card.querySelector('.card-title').textContent.split(':')[1].trim();
+            // Get animal type from the section
+            const animalTypeSection = card.closest('.animal-type-section');
+            const animalType = animalTypeSection.dataset.type;
+            
+            console.log('Adding health record for:', { animalId, animalType });
+            
+            document.getElementById('health_animal_id').value = animalId;
+            document.getElementById('health_animal_type').value = animalType;
+            
+            // Clear form
+            document.getElementById('healthRecordForm').reset();
+            
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('healthRecordModal'));
+            modal.show();
+        }
+
+        document.getElementById('healthRecordForm').addEventListener('submit', function(e) {
+            e.preventDefault(); // Prevent form submission
+
+            // Get form data
+            const formData = {
+                animal_id: document.getElementById('health_animal_id').value,
+                animal_type: document.getElementById('health_animal_type').value,
+                symptoms: document.getElementById('symptoms').value.trim(),
+                location: document.getElementById('location').value.trim(),
+                condition: document.getElementById('condition').value.trim(),
+                notes: document.getElementById('notes').value.trim(),
+                diagnosis: 'Pending', // Set default values since these fields are removed
+                treatment: 'Pending'
+            };
+
+            // Validate required fields
+            if (!formData.symptoms || !formData.condition || !formData.location) {
+                showToast('Error', 'Please fill in all required fields', 'error');
+                return;
+            }
+
+            // Disable save button and show loading
+            const saveButton = document.querySelector('#healthRecordForm button[type="submit"]');
+            const originalText = saveButton.innerHTML;
+            saveButton.disabled = true;
+            saveButton.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Saving...';
+
+            // Send data to server
+            fetch('/add_health_record', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => {
+                        throw new Error(err.error || 'Server error occurred');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // Show success message
+                    showToast('Success', 'Health record added successfully', 'success');
+                    
+                    // Close modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('healthRecordModal'));
+                    modal.hide();
+                    
+                    // Refresh page
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    throw new Error(data.error || 'Failed to save health record');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Error', error.message || 'Failed to save health record', 'error');
+                
+                // Reset save button
+                saveButton.disabled = false;
+                saveButton.innerHTML = originalText;
+            });
+        });
+
+        function showToast(title, message, type = 'info') {
+            // Remove any existing toasts
+            const existingToasts = document.querySelectorAll('.toast');
+            existingToasts.forEach(toast => toast.remove());
+
+            // Create new toast
+            const toast = document.createElement('div');
+            toast.className = `toast show position-fixed top-0 end-0 m-3`;
+            toast.style.zIndex = '9999';
+            toast.innerHTML = `
+                <div class="toast-header bg-${type === 'error' ? 'danger' : 'success'} text-white">
+                    <strong class="me-auto">${title}</strong>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+                </div>
+                <div class="toast-body">
+                    ${message}
+                </div>
+            `;
+
+            document.body.appendChild(toast);
+
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                toast.remove();
+            }, 5000);
+
+            // Add click handler to close button
+            toast.querySelector('.btn-close').addEventListener('click', () => {
+                toast.remove();
+            });
+        }
+    </script>
+</body>
+</html>

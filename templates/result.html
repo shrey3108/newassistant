@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Disease Details</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f7f9fc;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .options {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .option {
+            padding: 10px 20px;
+            background: #0d0d0d;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.3s;
+        }
+        .option:hover {
+            background: #0056b3;
+        }
+        .details {
+            text-align: center;
+            font-size: 1.2em;
+            color: #333;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Disease Detected: {{ disease }}</h1>
+        <div id="google_translate_element">
+
+        <div class="options">
+            <div class="option" data-type="description">Description</div>
+            <div class="option" data-type="precautions">Precautions</div>
+            <div class="option" data-type="medication">Medication</div>
+            <div class="option" data-type="workouts">Workouts</div>
+            <div class="option" data-type="diet">Diet</div>
+        </div>
+
+        <div class="details">
+            <p>Select an option to view details.</p>
+        </div>
+    </div>
+
+    <script>
+        const options = document.querySelectorAll('.option');
+        const detailsDiv = document.querySelector('.details');
+
+        const details = JSON.parse('{{ details | tojson | safe }}');
+
+        options.forEach(option => {
+            option.addEventListener('click', () => {
+                const type = option.dataset.type;
+                const content = details[type] || "No details available for this option.";
+                detailsDiv.innerHTML = `<p><strong>${type.charAt(0).toUpperCase() + type.slice(1)}:</strong> ${content}</p>`;
+            });
+        });
+    </script>
+        <script type="text/javascript">
+    function googleTranslateElementInit() {
+        new google.translate.TranslateElement({pageLanguage: 'en', includedLanguages: 'gu,hi,en', layout: google.translate.TranslateElement.InlineLayout.SIMPLE}, 'google_translate_element');
+    }
+</script>
+<script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+</body>
+</html>

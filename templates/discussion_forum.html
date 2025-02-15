@@ -1,0 +1,478 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    /* Custom styles for Twitter-like UI */
+    .post-card {
+        border: 1px solid #eee;
+        border-radius: 15px;
+        transition: background-color 0.2s;
+        margin-bottom: 1rem;
+    }
+
+    .post-card:hover {
+        background-color: #f8f9fa;
+    }
+
+    .post-header {
+        display: flex;
+        align-items: center;
+        padding: 12px 15px;
+    }
+
+    .user-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background-color: #1DA1F2;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin-right: 12px;
+    }
+
+    .user-info {
+        flex-grow: 1;
+    }
+
+    .username {
+        font-weight: bold;
+        color: #14171a;
+        margin-bottom: 0;
+    }
+
+    .post-time {
+        color: #657786;
+        font-size: 0.9em;
+    }
+
+    .post-content {
+        padding: 0 15px 15px;
+    }
+
+    .post-title {
+        font-size: 1.1em;
+        font-weight: bold;
+        margin-bottom: 8px;
+        color: #14171a;
+    }
+
+    .post-text {
+        color: #14171a;
+        line-height: 1.4;
+        margin-bottom: 12px;
+    }
+
+    .post-actions {
+        display: flex;
+        padding: 8px 15px;
+        border-top: 1px solid #eee;
+        gap: 20px;
+    }
+
+    .action-button {
+        background: none;
+        border: none;
+        color: #657786;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        padding: 5px 10px;
+        border-radius: 20px;
+        transition: all 0.2s;
+    }
+
+    .action-button:hover {
+        color: #1DA1F2;
+        background-color: #e8f5fe;
+    }
+
+    .action-button.delete-post:hover {
+        color: #e0245e;
+        background-color: #ffebf0;
+    }
+
+    .comments-section {
+        background-color: #f8f9fa;
+        border-top: 1px solid #eee;
+        padding: 15px;
+        border-bottom-left-radius: 15px;
+        border-bottom-right-radius: 15px;
+    }
+
+    .comment {
+        padding: 10px;
+        border-radius: 15px;
+        background-color: white;
+        margin-bottom: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .comment-form {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+    }
+
+    .comment-input {
+        flex-grow: 1;
+        border: 2px solid #eee;
+        border-radius: 20px;
+        padding: 8px 15px;
+        transition: border-color 0.2s;
+    }
+
+    .comment-input:focus {
+        border-color: #1DA1F2;
+        outline: none;
+    }
+
+    .comment-button {
+        background-color: #1DA1F2;
+        color: white;
+        border: none;
+        border-radius: 20px;
+        padding: 8px 20px;
+        font-weight: bold;
+        transition: background-color 0.2s;
+    }
+
+    .comment-button:hover {
+        background-color: #1991db;
+    }
+
+    .new-post-button {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        background-color: #1DA1F2;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        font-size: 24px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        transition: transform 0.2s;
+    }
+
+    .new-post-button:hover {
+        transform: scale(1.1);
+    }
+
+    /* Modal styles */
+    .custom-modal {
+        border-radius: 15px;
+    }
+
+    .custom-modal .modal-header {
+        border-bottom: none;
+        padding: 20px;
+    }
+
+    .custom-modal .modal-body {
+        padding: 0 20px 20px;
+    }
+
+    .custom-modal .form-control {
+        border-radius: 10px;
+        border: 2px solid #eee;
+        padding: 12px;
+    }
+
+    .custom-modal .form-control:focus {
+        border-color: #1DA1F2;
+        box-shadow: none;
+    }
+
+    .action-button.like-btn {
+        transition: all 0.2s;
+    }
+
+    .action-button.like-btn:hover {
+        color: #e0245e;
+        background-color: #ffebf0;
+    }
+
+    .action-button.like-btn.liked {
+        color: #e0245e;
+    }
+
+    .action-button.like-btn.liked i {
+        animation: likeAnimation 0.3s ease-in-out;
+    }
+
+    @keyframes likeAnimation {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.2); }
+        100% { transform: scale(1); }
+    }
+
+    .like-count {
+        margin-left: 5px;
+        font-size: 0.9em;
+    }
+
+    .action-button i {
+        transition: transform 0.2s;
+    }
+
+    .action-button:hover i {
+        transform: scale(1.1);
+    }
+</style>
+
+<div class="container mt-4">
+    <div class="row">
+        <!-- Left Sidebar -->
+        <div class="col-md-3">
+            <div class="position-sticky" style="top: 20px;">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Welcome, {{ session.username }}</h5>
+                        <p class="text-muted">Join the veterinary community discussion</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-6">
+            <h4 class="mb-4">Recent Discussions</h4>
+            
+            <!-- Posts List -->
+            <div class="posts-container">
+                {% for post in posts %}
+                <div class="post-card">
+                    <div class="post-header">
+                        <div class="user-avatar">
+                            {{ post.author[0] }}
+                        </div>
+                        <div class="user-info">
+                            <p class="username">{{ post.author }}</p>
+                            <span class="post-time">{{ post.created_at }}</span>
+                        </div>
+                        {% if post.author == session.get('username') %}
+                        <button class="action-button delete-post" data-post-id="{{ post._id }}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        {% endif %}
+                    </div>
+
+                    <div class="post-content">
+                        <div class="post-title">{{ post.title }}</div>
+                        <div class="post-text">{{ post.content }}</div>
+                    </div>
+
+                    <div class="post-actions">
+                        <button class="action-button" onclick="toggleComments('{{ post._id }}')">
+                            <i class="far fa-comment"></i>
+                            <span>{{ post.comments|length }}</span>
+                        </button>
+                        <button class="action-button like-btn {% if post.is_liked %}liked{% endif %}" 
+                                onclick="likePost('{{ post._id }}', this)" 
+                                data-post-id="{{ post._id }}">
+                            <i class="{% if post.is_liked %}fas{% else %}far{% endif %} fa-heart"></i>
+                            <span class="like-count">{{ post.like_count }}</span>
+                        </button>
+                        <button class="action-button" onclick="sharePost('{{ post._id }}')">
+                            <i class="far fa-share-square"></i>
+                        </button>
+                    </div>
+
+                    <div class="comments-section" id="comments-{{ post._id }}" style="display: none;">
+                        {% for comment in post.comments %}
+                        <div class="comment">
+                            <strong>{{ comment.author }}</strong>
+                            <span class="post-time">{{ comment.created_at }}</span>
+                            <p class="mb-0">{{ comment.content }}</p>
+                        </div>
+                        {% endfor %}
+
+                        <form class="comment-form add-comment-form" data-post-id="{{ post._id }}">
+                            <input type="text" class="comment-input" placeholder="Write a comment..." required>
+                            <button type="submit" class="comment-button">Reply</button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Right Sidebar -->
+        <div class="col-md-3">
+            <div class="position-sticky" style="top: 20px;">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-title">Trending Topics</h6>
+                        <div class="trending-topics">
+                            <p class="mb-2">#VeterinaryCare</p>
+                            <p class="mb-2">#AnimalHealth</p>
+                            <p class="mb-2">#PetCare</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Post Button -->
+    <button class="new-post-button" data-bs-toggle="modal" data-bs-target="#newPostModal">
+        <i class="fas fa-plus"></i>
+    </button>
+</div>
+
+<!-- New Post Modal -->
+<div class="modal fade" id="newPostModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content custom-modal">
+            <div class="modal-header">
+                <h5 class="modal-title">Create New Post</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="newPostForm">
+                    <div class="mb-3">
+                        <input type="text" class="form-control" name="title" placeholder="Post title" required>
+                    </div>
+                    <div class="mb-3">
+                        <textarea class="form-control" name="content" rows="4" placeholder="What's on your mind?" required></textarea>
+                    </div>
+                    <button type="submit" class="btn comment-button w-100">Post</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Move likePost function outside document.ready
+function likePost(postId, button) {
+    $.ajax({
+        url: `/api/discussion_forum/posts/${postId}/like`,
+        method: 'POST',
+        success: function(response) {
+            if (response.success) {
+                const btn = $(button);
+                const icon = btn.find('i');
+                const countSpan = btn.find('.like-count');
+                
+                // Update like count
+                countSpan.text(response.count);
+                
+                // Toggle heart icon
+                if (response.liked) {
+                    icon.removeClass('far').addClass('fas');
+                } else {
+                    icon.removeClass('fas').addClass('far');
+                }
+                
+                // Update button color
+                btn.toggleClass('liked', response.liked);
+            }
+        },
+        error: function(error) {
+            console.error('Error:', error);
+            alert('Error updating like: ' + (error.responseJSON?.message || 'Unknown error'));
+        }
+    });
+}
+
+// Add share post function
+function sharePost(postId) {
+    // Get the post URL
+    const postUrl = window.location.origin + '/discussion_forum/posts/' + postId;
+    
+    // Check if Web Share API is available
+    if (navigator.share) {
+        navigator.share({
+            title: 'Shared Post',
+            url: postUrl
+        }).catch(console.error);
+    } else {
+        // Fallback: Copy to clipboard
+        navigator.clipboard.writeText(postUrl).then(() => {
+            alert('Link copied to clipboard!');
+        }).catch(() => {
+            alert('Failed to copy link');
+        });
+    }
+}
+
+$(document).ready(function() {
+    // Handle new post submission
+    $('#newPostForm').on('submit', function(e) {
+        e.preventDefault();
+        const formData = {
+            title: $(this).find('input[name="title"]').val(),
+            content: $(this).find('textarea[name="content"]').val()
+        };
+        
+        $.ajax({
+            url: '/api/discussion_forum/posts',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(formData),
+            success: function(response) {
+                location.reload();
+            },
+            error: function(error) {
+                alert('Error creating post: ' + error.responseJSON?.message);
+            }
+        });
+    });
+
+    // Handle new comment submission
+    $('.add-comment-form').on('submit', function(e) {
+        e.preventDefault();
+        const postId = $(this).data('post-id');
+        const content = $(this).find('input').val();
+        
+        $.ajax({
+            url: `/api/discussion_forum/posts/${postId}/comments`,
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ content: content }),
+            success: function(response) {
+                location.reload();
+            },
+            error: function(error) {
+                alert('Error adding comment: ' + error.responseJSON?.message);
+            }
+        });
+    });
+
+    // Handle post deletion
+    $('.delete-post').on('click', function() {
+        if (confirm('Are you sure you want to delete this post?')) {
+            const postId = $(this).data('post-id');
+            
+            $.ajax({
+                url: `/api/discussion_forum/posts/${postId}`,
+                method: 'DELETE',
+                success: function(response) {
+                    location.reload();
+                },
+                error: function(error) {
+                    alert('Error deleting post: ' + error.responseJSON?.message);
+                }
+            });
+        }
+    });
+});
+
+// Function to toggle comments visibility
+function toggleComments(postId) {
+    const commentsSection = document.getElementById(`comments-${postId}`);
+    if (commentsSection.style.display === 'none') {
+        commentsSection.style.display = 'block';
+    } else {
+        commentsSection.style.display = 'none';
+    }
+}
+</script>
+{% endblock %}
