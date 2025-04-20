@@ -1,7 +1,10 @@
 # AniHelp
 <div style="text-align: center; margin: 0; padding: 0;">
-  <img src="https://raw.githubusercontent.com/shrey3108/newassistant/main/cow.jpg" style="display: block; margin: auto; padding: 0;" alt="Hackathon Image" />
+  <img src="https://raw.githubusercontent.com/shrey3108/newassistant/main/cow.jpg" 
+       style="display: block; margin: 0 auto; padding: 0;" 
+       alt="AniHelp Logo" />
 </div>
+
 
 > Problem Statement (SIH1673)
 
