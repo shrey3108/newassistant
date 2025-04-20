@@ -1,5 +1,7 @@
 # AniHelp
-![Hackathon (2)](https://raw.githubusercontent.com/shrey3108/newassistant/main/cow.jpg)
+<div style="text-align: center; margin: 0; padding: 0;">
+  <img src="https://raw.githubusercontent.com/shrey3108/newassistant/main/cow.jpg" style="display: block; margin: auto; padding: 0;" alt="Hackathon Image" />
+</div>
 
 > Problem Statement (SIH1673)
 
