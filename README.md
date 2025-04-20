@@ -124,7 +124,6 @@ veterinary-management-system/
 ├── requirements.txt     # Python dependencies
 └── .env                # Environment variables
 ```
-#### GitHub Repository Structure
 
 
 ## Team Members:
