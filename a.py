@@ -2,7 +2,7 @@ from flask import Flask, request, render_template
 import sqlite3
 import openai  # Replace with Gemini's equivalent when available
 import google.generativeai as genai
-
+#
 
 
 genai.configure(api_key="AIzaSyBwejNLB1HWEO7NUQAPF4oYPBWGHSAyd1k")
