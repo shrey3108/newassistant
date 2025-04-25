@@ -155,7 +155,7 @@ veterinary-management-system/
 
 This project follows the [MIT License](https://choosealicense.com/licenses/mit/).
 
-[![Uses Git](https://forthebadge.com/images/badges/uses-git.svg)](https://github.com/rudrakshi99/Farmer-Call-Center) 
-[![forthebadge](https://forthebadge.com/images/badges/made-with-javascript.svg)](https://github.com/rudrakshi99/Farmer-Call-Center)
-[![forthebadge](https://forthebadge.com/images/badges/made-with-python.svg)](https://github.com/rudrakshi99/Farmer-Call-Center)
-[![Built with love](https://forthebadge.com/images/badges/built-with-love.svg)](https://github.com/rudrakshi99/Farmer-Call-Center.git) [![Built By Developers](https://forthebadge.com/images/badges/built-by-developers.svg)](https://github.com/rudrakshi99/Farmer-Call-Center) 
+[![Uses Git](https://forthebadge.com/images/badges/uses-git.svg)](https://github.com/shrey3108/newassistant) 
+[![forthebadge](https://forthebadge.com/images/badges/made-with-javascript.svg)](https://github.com/shrey3108/newassistant)
+[![forthebadge](https://forthebadge.com/images/badges/made-with-python.svg)](https://github.com/shrey3108/newassistant)
+[![Built with love](https://forthebadge.com/images/badges/built-with-love.svg)](https://github.com/shrey3108/newassistant) [![Built By Developers](https://forthebadge.com/images/badges/built-by-developers.svg)](https://github.com/shrey3108/newassistant) 
